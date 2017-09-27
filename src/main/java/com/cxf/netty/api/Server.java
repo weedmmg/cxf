@@ -17,27 +17,8 @@
  *   ohun@live.cn (夜色)
  */
 
-package com.cxf.boot;
+package com.cxf.netty.api;
 
-import com.cxf.netty.core.ConnectionServer;
-
-public final class ServerLauncher {
-
-    ConnectionServer server;
-
-    public void init() {
-        server = new ConnectionServer();
-
-    }
-
-    public void start() {
-        // chain.start();
-        server.start();
-    }
-
-    public void stop() {
-        // chain.stop();
-        server.stop();
-    }
+public interface Server extends Service {
 
 }

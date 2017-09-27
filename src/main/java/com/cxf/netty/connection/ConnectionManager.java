@@ -17,27 +17,26 @@
  *   ohun@live.cn (夜色)
  */
 
-package com.cxf.boot;
+package com.cxf.netty.connection;
 
-import com.cxf.netty.core.ConnectionServer;
+import io.netty.channel.Channel;
 
-public final class ServerLauncher {
+/**
+ * Created by ohun on 2015/12/30.
+ *
+ * @author ohun@live.cn (夜色)
+ */
+public interface ConnectionManager {
 
-    ConnectionServer server;
+    Connection get(Channel channel);
 
-    public void init() {
-        server = new ConnectionServer();
+    Connection removeAndClose(Channel channel);
 
-    }
+    void add(Connection connection);
 
-    public void start() {
-        // chain.start();
-        server.start();
-    }
+    int getConnNum();
 
-    public void stop() {
-        // chain.stop();
-        server.stop();
-    }
+    void init();
 
+    void destroy();
 }

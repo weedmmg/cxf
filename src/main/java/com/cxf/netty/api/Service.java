@@ -17,27 +17,26 @@
  *   ohun@live.cn (夜色)
  */
 
-package com.cxf.boot;
+package com.cxf.netty.api;
 
-import com.cxf.netty.core.ConnectionServer;
+import java.util.concurrent.CompletableFuture;
 
-public final class ServerLauncher {
+public interface Service {
 
-    ConnectionServer server;
+    void start(Listener listener);
 
-    public void init() {
-        server = new ConnectionServer();
+    void stop(Listener listener);
 
-    }
+    CompletableFuture<Boolean> start();
 
-    public void start() {
-        // chain.start();
-        server.start();
-    }
+    CompletableFuture<Boolean> stop();
 
-    public void stop() {
-        // chain.stop();
-        server.stop();
-    }
+    boolean syncStart();
+
+    boolean syncStop();
+
+    void init();
+
+    boolean isRunning();
 
 }

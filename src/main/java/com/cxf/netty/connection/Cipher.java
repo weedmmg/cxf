@@ -17,27 +17,17 @@
  *   ohun@live.cn (夜色)
  */
 
-package com.cxf.boot;
+package com.cxf.netty.connection;
 
-import com.cxf.netty.core.ConnectionServer;
+/**
+ * Created by ohun on 2015/12/28.
+ *
+ * @author ohun@live.cn
+ */
+public interface Cipher {
 
-public final class ServerLauncher {
+    byte[] decrypt(byte[] data);
 
-    ConnectionServer server;
-
-    public void init() {
-        server = new ConnectionServer();
-
-    }
-
-    public void start() {
-        // chain.start();
-        server.start();
-    }
-
-    public void stop() {
-        // chain.stop();
-        server.stop();
-    }
+    byte[] encrypt(byte[] data);
 
 }
