@@ -31,7 +31,7 @@ import com.cxf.netty.api.Server;
 import com.cxf.netty.api.ServiceException;
 import com.cxf.thread.ThreadNames;
 import com.cxf.util.Strings;
-import com.cxf.util.config.CC;
+
 
 public abstract class NettyTCPServer extends BaseService implements Server {
 
@@ -43,14 +43,12 @@ public abstract class NettyTCPServer extends BaseService implements Server {
 
     protected final AtomicReference<State> serverState = new AtomicReference<>(State.Created);
 
-    protected final int port;
-    protected final String host;
+    protected  int port;
+    protected  String host;
     protected EventLoopGroup bossGroup;
     protected EventLoopGroup workerGroup;
 
-    public NettyTCPServer(int port) {
-        this.port = port;
-        this.host = null;
+    public NettyTCPServer() {
     }
 
     public NettyTCPServer(int port, String host) {
@@ -58,7 +56,9 @@ public abstract class NettyTCPServer extends BaseService implements Server {
         this.host = host;
     }
 
-    public void init() {
+    public void init(int port, String host) {
+    	this.port = port;
+        this.host = host;
         if (!serverState.compareAndSet(State.Created, State.Initialized)) {
             throw new ServiceException("Server already init");
         }
@@ -287,14 +287,7 @@ public abstract class NettyTCPServer extends BaseService implements Server {
     }
 
     protected boolean useNettyEpoll() {
-        if (CC.mp.core.useNettyEpoll()) {
-            try {
-                Native.offsetofEpollData();
-                return true;
-            } catch (UnsatisfiedLinkError error) {
-                logger.warn("can not load netty epoll, switch nio model.");
-            }
-        }
+       
         return false;
     }
 

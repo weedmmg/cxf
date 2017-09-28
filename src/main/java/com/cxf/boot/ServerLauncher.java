@@ -27,6 +27,7 @@ public final class ServerLauncher {
 
     public void init() {
         server = new ConnectionServer();
+        server.init();
 
     }
 

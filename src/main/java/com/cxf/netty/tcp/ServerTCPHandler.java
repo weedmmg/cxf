@@ -56,7 +56,7 @@ public class ServerTCPHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         Connection connection = connectionManager.removeAndClose(ctx.channel());
-        EventBus.post(new ConnectionCloseEvent(connection));
+        //EventBus.post(new ConnectionCloseEvent(connection));
         Logs.CONN.info("client disconnected conn={}", connection);
     }
 

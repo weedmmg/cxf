@@ -19,10 +19,6 @@
 
 package com.cxf.netty.core;
 
-import static com.cxf.util.config.CC.mp.net.connect_server_bind_ip;
-import static com.cxf.util.config.CC.mp.net.connect_server_port;
-import static com.cxf.util.config.CC.mp.net.write_buffer_water_mark.connect_server_high;
-import static com.cxf.util.config.CC.mp.net.write_buffer_water_mark.connect_server_low;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelOption;
@@ -30,16 +26,16 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.handler.traffic.GlobalChannelTrafficShapingHandler;
 
+import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
 
 import com.cxf.netty.api.Listener;
 import com.cxf.netty.connection.ConnectionManager;
+import com.cxf.netty.connection.ServerConnectionManager;
 import com.cxf.netty.tcp.NettyTCPServer;
 import com.cxf.netty.tcp.ServerTCPHandler;
 import com.cxf.thread.ThreadNames;
-import com.cxf.util.config.CC;
-import com.cxf.util.config.CC.mp.net.rcv_buf;
-import com.cxf.util.config.CC.mp.net.snd_buf;
+import com.cxf.util.PropertiesUtil;
 
 /**
  * Created by ohun on 2015/12/30.
@@ -53,19 +49,23 @@ public final class ConnectionServer extends NettyTCPServer {
     private ScheduledExecutorService trafficShapingExecutor;
     // private MessageDispatcher messageDispatcher;
     private ConnectionManager connectionManager;
+    
+    private Properties prop=PropertiesUtil.loadProperties();
 
     // private MPushServer mPushServer;
 
     public ConnectionServer() {
-        super(connect_server_port, connect_server_bind_ip);
+    	super();
+       
         // this.mPushServer = mPushServer;
-        // this.connectionManager = new ServerConnectionManager(true);
+         this.connectionManager = new ServerConnectionManager(true);
         this.channelHandler = new ServerTCPHandler(true, connectionManager);
     }
 
     @Override
     public void init() {
-        super.init();
+    	super.init(Integer.parseInt(prop.getProperty("netty.port")), prop.getProperty("netty.id"));
+       
         connectionManager.init();
 
     }
@@ -85,7 +85,7 @@ public final class ConnectionServer extends NettyTCPServer {
 
     @Override
     protected int getWorkThreadNum() {
-        return CC.mp.thread.pool.conn_work;
+        return Integer.parseInt(prop.getProperty("conn.work"));
     }
 
     @Override
@@ -116,10 +116,10 @@ public final class ConnectionServer extends NettyTCPServer {
          * TCP层面的接收和发送缓冲区大小设置， 在Netty中分别对应ChannelOption的SO_SNDBUF和SO_RCVBUF，
          * 需要根据推送消息的大小，合理设置，对于海量长连接，通常32K是个不错的选择。
          */
-        if (snd_buf.connect_server > 0)
-            b.childOption(ChannelOption.SO_SNDBUF, snd_buf.connect_server);
-        if (rcv_buf.connect_server > 0)
-            b.childOption(ChannelOption.SO_RCVBUF, rcv_buf.connect_server);
+        if (Integer.valueOf(prop.getProperty("snd_buf.connect-server")) > 0)
+            b.childOption(ChannelOption.SO_SNDBUF, Integer.valueOf(prop.getProperty("snd_buf.connect-server")) );
+        if (Integer.valueOf(prop.getProperty("rcv_buf.connect-server"))  > 0)
+            b.childOption(ChannelOption.SO_RCVBUF,Integer.valueOf(prop.getProperty("rcv_buf.connect-server")) );
 
         /**
          * 这个坑其实也不算坑，只是因为懒，该做的事情没做。一般来讲我们的业务如果比较小的时候我们用同步处理，等业务到一定规模的时候，
@@ -144,7 +144,7 @@ public final class ConnectionServer extends NettyTCPServer {
          * isWritable就会变成true。所以应用应该判断isWritable，如果是false就不要再写数据了。
          * 高水位线和低水位线是字节数，默认高水位是64K，低水位是32K，我们可以根据我们的应用需要支持多少连接数和系统资源进行合理规划。
          */
-        b.childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(connect_server_low, connect_server_high));
+        b.childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(Integer.valueOf(prop.getProperty("connect-server.low")), Integer.valueOf(prop.getProperty("connect-server.high"))));
     }
 
     @Override

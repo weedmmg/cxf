@@ -41,6 +41,9 @@ public class Logs {
 
 	HTTP = LoggerFactory.getLogger("cxf.http.log"),
 
-	TCP = LoggerFactory.getLogger("cxf.tcp.log");
+	TCP = LoggerFactory.getLogger("cxf.tcp.log"),
+	
+	HB = LoggerFactory.getLogger("cxf.hb.log");
+	
 
 }

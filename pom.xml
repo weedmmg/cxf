@@ -6,8 +6,8 @@
 	<groupId>com.cxf</groupId>
 	<artifactId>kyle</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
-	<packaging>jar</packaging>
-
+	 <packaging>jar</packaging>
+ <!---->
 
 
 	<properties>
@@ -148,11 +148,61 @@
 			<version>3.21.0-GA</version>
 		</dependency>
 
-
-
-
 	</dependencies>
 
+    <!-- 编译配置 -->
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.6.2</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>${java.encoding}</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.0.2</version>
+                <configuration>
+                    <encoding>${java.encoding}</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<classpathPrefix>lib/</classpathPrefix>
+							<mainClass>com.cxf.boot.Main</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+           	<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>2.10</version>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+        </plugins>
+    </build>
+<!--  	
 	<build>
 		<finalName>kyle</finalName>
 
@@ -193,4 +243,5 @@
 			</plugin>
 		</plugins>
 	</build>
+-->
 </project>
