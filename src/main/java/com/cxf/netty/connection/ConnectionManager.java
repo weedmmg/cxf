@@ -30,6 +30,8 @@ public interface ConnectionManager {
 
     Connection get(Channel channel);
 
+    Connection getById(String channelId);
+
     Connection removeAndClose(Channel channel);
 
     void add(Connection connection);

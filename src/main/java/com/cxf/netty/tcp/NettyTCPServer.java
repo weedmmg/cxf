@@ -1,7 +1,26 @@
 package com.cxf.netty.tcp;
 
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFactory;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.ServerChannel;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerSocketChannel;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.AttributeKey;
+import io.netty.util.concurrent.DefaultThreadFactory;
+
 import java.net.InetSocketAddress;
 import java.nio.channels.spi.SelectorProvider;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -15,23 +34,6 @@ import com.cxf.netty.api.ServiceException;
 import com.cxf.thread.ThreadNames;
 import com.cxf.util.Strings;
 
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFactory;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.ServerChannel;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollServerSocketChannel;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.concurrent.DefaultThreadFactory;
-
-
 public abstract class NettyTCPServer extends BaseService implements Server {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -42,8 +44,15 @@ public abstract class NettyTCPServer extends BaseService implements Server {
 
     protected final AtomicReference<State> serverState = new AtomicReference<>(State.Created);
 
-    protected  int port;
-    protected  String host;
+    public final static AttributeKey<String> sendChannel = AttributeKey.valueOf("sendChannel");
+    public final static AttributeKey<String> rcvChannel = AttributeKey.valueOf("rcvChannel");
+
+    public static ConcurrentHashMap<String, ChannelHandlerContext> sendChannelMap = new ConcurrentHashMap<String, ChannelHandlerContext>();
+
+    public static ConcurrentHashMap<String, ChannelHandlerContext> rcvChannelMap = new ConcurrentHashMap<String, ChannelHandlerContext>();
+
+    protected int port;
+    protected String host;
     protected EventLoopGroup bossGroup;
     protected EventLoopGroup workerGroup;
 
@@ -56,7 +65,7 @@ public abstract class NettyTCPServer extends BaseService implements Server {
     }
 
     public void init(int port, String host) {
-    	this.port = port;
+        this.port = port;
         this.host = host;
         if (!serverState.compareAndSet(State.Created, State.Initialized)) {
             throw new ServiceException("Server already init");
@@ -286,7 +295,7 @@ public abstract class NettyTCPServer extends BaseService implements Server {
     }
 
     protected boolean useNettyEpoll() {
-       
+
         return false;
     }
 
