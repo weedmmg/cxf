@@ -19,26 +19,34 @@
 
 package com.cxf.boot;
 
+import com.cxf.netty.ChannelType;
 import com.cxf.netty.core.ConnectionServer;
+import com.cxf.netty.http.HttpServer;
+import com.cxf.util.PropertiesUtil;
 
 public final class ServerLauncher {
 
-    ConnectionServer server;
+	ConnectionServer server;
+	HttpServer httpServer;
 
-    public void init() {
-        server = new ConnectionServer();
-        server.init();
+	public void init() {
+		server = new ConnectionServer();
+		server.init();
 
-    }
+		httpServer = new HttpServer(ChannelType.NIO, Integer.parseInt(PropertiesUtil.getValue("netty.http.port")));
 
-    public void start() {
-        // chain.start();
-        server.start();
-    }
+	}
 
-    public void stop() {
-        // chain.stop();
-        server.stop();
-    }
+	public void start() {
+		// chain.start();
+		server.start();
+		httpServer.start();
+	}
+
+	public void stop() {
+		// chain.stop();
+		server.stop();
+		httpServer.stop();
+	}
 
 }

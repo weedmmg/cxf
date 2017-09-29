@@ -19,11 +19,11 @@
 
 package com.cxf.netty.connection;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelId;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelId;
 
 /**
  * Created by ohun on 2016/12/27.

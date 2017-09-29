@@ -19,14 +19,14 @@
 
 package com.cxf.netty.connection;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cxf.logger.Logs;
+
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 
 /**
  * Created by ohun on 2015/12/22.

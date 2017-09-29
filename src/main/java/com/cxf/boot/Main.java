@@ -29,7 +29,7 @@ public class Main {
      */
     public static void main(String[] args) {
         Logs.init();
-        Logs.Console.info("launch mpush server...");
+        Logs.Console.info("launch netty server...");
         final ServerLauncher launcher = new ServerLauncher();
         launcher.init();
         launcher.start();

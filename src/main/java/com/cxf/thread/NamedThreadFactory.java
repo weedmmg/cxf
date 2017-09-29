@@ -19,10 +19,10 @@
 
 package com.cxf.thread;
 
+import static com.cxf.thread.ThreadNames.THREAD_NAME_PREFIX;
+
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.cxf.thread.ThreadNames.THREAD_NAME_PREFIX;
 
 /**
  * Created by xiaoxu.yxx on 2015/7/19.
