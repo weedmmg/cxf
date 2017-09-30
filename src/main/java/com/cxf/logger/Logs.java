@@ -19,7 +19,8 @@
 
 package com.cxf.logger;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by ohun on 2016/5/16.
@@ -28,26 +29,27 @@ import org.apache.log4j.Logger;
  */
 public class Logs {
 
-    static String propsPath = "/src/main/resources/";
+	static String propsPath = "/src/main/resources/";
 
-    public static void init() {
-        String path = System.getProperty("user.dir");
-        // System.setProperty("log.home", path + "logs");
-        // System.setProperty("log.root.level", "warn");
+	public static void init() {
+		String path = System.getProperty("user.dir");
+		// System.setProperty("log.home", path + "logs");
+		// System.setProperty("log.root.level", "warn");
+		System.setProperty("log4j.configurationFile", path + propsPath + "logback.xml");
+		// System.setProperty("log4j.configurationFile", path + propsPath +
+		// "log4j.properties");
+	}
 
-        System.setProperty("log4j.configurationFile", path + propsPath + "log4j.properties");
-    }
+	public final static Logger Console = LoggerFactory.getLogger("console"),
 
-    public final static Logger Console = Logger.getLogger("console"),
+			CONN = LoggerFactory.getLogger("cxf.conn.log"),
 
-    CONN = Logger.getLogger("cxf.conn.log"),
+			PUSH = LoggerFactory.getLogger("cxf.push.log"),
 
-    PUSH = Logger.getLogger("cxf.push.log"),
+			HTTP = LoggerFactory.getLogger("cxf.http.log"),
 
-    HTTP = Logger.getLogger("cxf.http.log"),
+			TCP = LoggerFactory.getLogger("cxf.tcp.log"),
 
-    TCP = Logger.getLogger("cxf.tcp.log"),
-
-    HB = Logger.getLogger("cxf.hb.log");
+			HB = LoggerFactory.getLogger("cxf.hb.log");
 
 }
