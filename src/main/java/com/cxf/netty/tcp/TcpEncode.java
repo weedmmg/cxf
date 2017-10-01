@@ -6,11 +6,13 @@ import java.io.OutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cxf.logger.Logs;
 import com.cxf.util.ByteUtil;
 import com.cxf.util.MD5Util;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
@@ -40,18 +42,17 @@ public final class TcpEncode extends MessageToByteEncoder<byte[]> {
 
 	public static void writeMsg(byte[] msg, ByteBufOutputStream bout) throws Exception {
 
-		String headStr = "EX", endStr = "86";
-
-		byte[] head = headStr.getBytes(encoding), end = endStr.getBytes(encoding);
+		byte[] head = ByteUtil.hexString2Bytes("EC"), end = ByteUtil.hexString2Bytes("68");
 
 		String sign = MD5Util.string2MD5(new String(msg));
-		logger.debug("sign:" + sign);
-		byte[] newMsg = ByteUtil.byteMergerAll(head, msg, sign.getBytes(encoding), end);
+		// logger.debug("sign:" + sign);
+		ByteBuf byteBuf = Unpooled.wrappedBuffer(head, msg, sign.getBytes(encoding), end);
 
-		logger.debug("加密前前" + msg.length);
-		logger.debug("加密后" + newMsg.length);
+		byte[] array = new byte[byteBuf.readableBytes()];
+		byteBuf.readBytes(array);
+		Logs.TCP.warn("send msg:" + ByteUtil.printHexString(array));
 		OutputStream oout = new DataOutputStream(bout);
-		oout.write(newMsg);
+		oout.write(array);
 		oout.flush();
 		oout.close();
 	}
