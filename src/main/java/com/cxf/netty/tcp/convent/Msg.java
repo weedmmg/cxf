@@ -3,6 +3,7 @@ package com.cxf.netty.tcp.convent;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
@@ -13,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSONObject;
+import com.cxf.logger.Logs;
 import com.cxf.netty.connection.Connection;
 import com.cxf.netty.connection.ConnectionManager;
 import com.cxf.netty.tcp.NettyTCPServer;
@@ -58,6 +60,8 @@ public class Msg {
     }
 
     public static void handleMsg(byte cmd, byte[] data, ChannelHandlerContext ctx, ConnectionManager connectionManager) {
+
+        logger.info("channelId:" + ctx.channel().id());
         Map<String, Object> paramMap = new HashMap<String, Object>();
         String url = "", channelId = "";
 
@@ -89,49 +93,7 @@ public class Msg {
             // heartbeat
             break;
 
-        case 0x03:
-
-            String modifyInfo = new String(data);
-            channelId = modifyInfo.split(PropertiesUtil.getValue("system.split"))[0];
-            String times = modifyInfo.split(PropertiesUtil.getValue("system.split"))[1];
-            if (Strings.isBlank(channelId)) {
-                logger.error("error channelId:" + channelId + " or times: " + times + " is null.");
-                break;
-            }
-            ctx.channel().attr(NettyTCPServer.sendChannel).set(channelId);
-            Connection sendConnection = connectionManager.getById(channelId);
-            if (sendConnection != null) {
-                sendConnection.getChannel().attr(NettyTCPServer.rcvChannel).set(ctx.channel().id().toString());
-
-                cmd = 0x03;
-                try {
-                    byte[] pushMsg = intMsg(cmd, times.getBytes(encoding));
-                    sendConnection.send(pushMsg);
-                    break;
-                } catch (Exception e) {
-                    logger.error("push modify time error:" + e.getMessage());
-                }
-            }
-
         case (byte) 0xBE:
-
-            channelId = ctx.channel().attr(NettyTCPServer.rcvChannel).get();
-            if (!Strings.isBlank(channelId)) {
-                try {
-                    byte[] pushMsg = intMsg(cmd, data);
-                    Connection rcvConnection = connectionManager.getById(channelId);
-
-                    if (rcvConnection != null) {
-
-                        rcvConnection.send(pushMsg);
-                    }
-
-                    break;
-                } catch (Exception e) {
-                    logger.error("push modify time error:" + e.getMessage());
-                }
-            }
-            logger.info("channelId:" + ctx.channel().id().toString());
             // location
             url = PropertiesUtil.getValue("system.location.url");
             if (Strings.isBlank(url)) {
@@ -145,6 +107,23 @@ public class Msg {
                 paramMap.put("serverIp", PropertiesUtil.getValue("netty.ip"));
                 initLocationMap(paramMap, data);
                 ctx.executor().submit(new UrlThreadFactory(url, new JSONObject(paramMap).toString()));
+            }
+
+            channelId = ctx.channel().attr(NettyTCPServer.rcvChannel).get();
+            if (!Strings.isBlank(channelId)) {
+                try {
+                    Connection rcvConnection = connectionManager.getById(channelId);
+
+                    if (rcvConnection != null) {
+
+                        rcvConnection.send(new TextWebSocketFrame(new JSONObject(paramMap).toString()));
+                        Logs.WS.info("send location msg:" + new JSONObject(paramMap).toString());
+                    }
+
+                    break;
+                } catch (Exception e) {
+                    Logs.WS.error("push modify time error:" + e.getMessage());
+                }
             }
 
             break;
@@ -169,11 +148,12 @@ public class Msg {
         llBytes.readBytes(lls);
         laBytes.readBytes(las);
         statusBytes.readBytes(status);
-        paramMap.put("state", ByteUtil.byteArrayToLong(states, 1));
+        paramMap.put("gpsstate", ByteUtil.byteArrayToLong(states, 1));
         paramMap.put("longitude", (double) ByteUtil.byteArrayToLong(lls, 4) / 1000000);
         paramMap.put("latitude", (double) ByteUtil.byteArrayToLong(las, 4) / 1000000);
         paramMap.put("speed", ByteUtil.byteArrayToLong(speeds, 2));
-        paramMap.put("status", ByteUtil.byteArrayToLong(status, 1));
+        paramMap.put("gpsstatus", ByteUtil.byteArrayToLong(status, 1));
+        paramMap.put("uuid", "123456");
     }
 
     public static boolean checkSign(byte[] msg, byte[] sign) {

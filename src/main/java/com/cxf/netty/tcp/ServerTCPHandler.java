@@ -3,6 +3,7 @@ package com.cxf.netty.tcp;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
 import java.io.UnsupportedEncodingException;
 import java.net.SocketAddress;
@@ -60,29 +61,17 @@ public class ServerTCPHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-
-    }
-
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        Logs.CONN.debug("client connected conn={}", ctx.channel());
-        Connection connection = new NettyConnection();
-        connection.init(ctx.channel(), security);
-        connectionManager.add(connection);
-    }
-
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        Connection connection = connectionManager.removeAndClose(ctx.channel());
-
-        String channelId = ctx.channel().attr(NettyTCPServer.sendChannel).get();
+        String channelId = ctx.channel().attr(NettyTCPServer.rcvChannel).get();
         if (!Strings.isBlank(channelId)) {
             Connection sendConnection = connectionManager.getById(channelId);
             if (sendConnection != null) {
 
-                sendConnection.getChannel().attr(NettyTCPServer.rcvChannel).set("");
+                sendConnection.getChannel().attr(NettyTCPServer.sendChannel).set("");
+                sendConnection.getChannel().writeAndFlush(new TextWebSocketFrame(ctx.channel().id() + " 长连接断开！"));
             }
         }
+
+        Connection connection = connectionManager.removeAndClose(ctx.channel());
 
         String url = PropertiesUtil.getValue("system.logout.url");
         if (!Strings.isBlank(url)) {
@@ -97,6 +86,19 @@ public class ServerTCPHandler extends ChannelInboundHandlerAdapter {
 
         // EventBus.post(new ConnectionCloseEvent(connection));
         Logs.CONN.debug("client disconnected conn={}", connection);
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        Logs.CONN.debug("client connected conn={}", ctx.channel());
+        Connection connection = new NettyConnection();
+        connection.init(ctx.channel(), security);
+        connectionManager.add(connection);
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+
     }
 
     public static String getClientIp(SocketAddress address) {

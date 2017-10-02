@@ -19,26 +19,36 @@
 
 package com.cxf.boot;
 
+import com.cxf.netty.connection.ConnectionManager;
+import com.cxf.netty.connection.ServerConnectionManager;
 import com.cxf.netty.core.ConnectionServer;
+import com.cxf.netty.websocket.WebsocketServer;
 
 public final class ServerLauncher {
 
-	ConnectionServer server;
+    ConnectionServer server;
+    WebsocketServer wsServer;
+    private final ConnectionManager connectionManager = new ServerConnectionManager(false);;
 
-	public void init() {
-		server = new ConnectionServer();
-		server.init();
+    public void init() {
+        server = new ConnectionServer(connectionManager);
+        wsServer = new WebsocketServer(connectionManager);
+        server.init();
+        wsServer.init();
 
-	}
+    }
 
-	public void start() {
-		// chain.start();
-		server.start();
-	}
+    public void start() {
+        // chain.start();
 
-	public void stop() {
-		// chain.stop();
-		server.stop();
-	}
+        wsServer.start();
+        server.start();
+    }
+
+    public void stop() {
+        // chain.stop();
+        server.stop();
+        wsServer.stop();
+    }
 
 }
