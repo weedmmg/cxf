@@ -1,0 +1,54 @@
+2017-10-07 21:49:18.670 [main] INFO  console -
+				launch netty server...
+2017-10-07 21:49:20.659 [mp-boss-1-1] INFO  cxf.hb.log -
+				server start success on:8886
+2017-10-07 21:49:20.663 [mp-conn-boss-4-1] INFO  cxf.hb.log -
+				server start success on:8887
+2017-10-07 21:51:55.441 [main] INFO  console -
+				launch netty server...
+2017-10-07 21:51:56.773 [mp-boss-1-1] INFO  cxf.hb.log -
+				server start success on:8886
+2017-10-07 21:51:56.777 [mp-conn-boss-4-1] INFO  cxf.hb.log -
+				server start success on:8887
+2017-10-07 21:52:04.456 [mp-conn-work-5-1] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:f61ca9ea
+2017-10-07 21:52:14.467 [mp-conn-work-5-1] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:f61ca9ea
+2017-10-07 21:52:24.474 [mp-conn-work-5-1] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:f61ca9ea
+2017-10-07 21:52:34.480 [mp-conn-work-5-1] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:f61ca9ea
+2017-10-07 21:52:44.487 [mp-conn-work-5-1] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:f61ca9ea
+2017-10-07 21:52:54.495 [mp-conn-work-5-1] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:f61ca9ea
+2017-10-07 21:54:57.827 [mp-conn-work-5-2] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:e3ff5e9f
+2017-10-07 21:55:07.834 [mp-conn-work-5-2] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:e3ff5e9f
+2017-10-07 21:55:17.843 [mp-conn-work-5-2] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:e3ff5e9f
+2017-10-07 21:55:27.850 [mp-conn-work-5-2] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:e3ff5e9f
+2017-10-07 21:55:37.857 [mp-conn-work-5-2] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:e3ff5e9f
+2017-10-07 21:55:47.861 [mp-conn-work-5-2] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:e3ff5e9f
+2017-10-07 21:55:57.864 [mp-conn-work-5-2] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:e3ff5e9f
+2017-10-07 21:56:07.870 [mp-conn-work-5-2] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:e3ff5e9f
+2017-10-07 21:56:17.875 [mp-conn-work-5-2] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:e3ff5e9f
+2017-10-07 21:56:27.881 [mp-conn-work-5-2] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:e3ff5e9f
+2017-10-07 21:56:37.889 [mp-conn-work-5-2] INFO  com.cxf.netty.tcp.convent.Msg -
+				channelId:e3ff5e9f
+2017-10-07 22:16:35.716 [main] INFO  console -
+				launch netty server...
+2017-10-07 22:16:37.216 [mp-boss-1-1] INFO  cxf.hb.log -
+				server start success on:8886
+2017-10-07 22:16:37.220 [mp-conn-boss-4-1] INFO  cxf.hb.log -
+				server start success on:8887
+2017-10-07 22:17:19.576 [mp-work-3-1] INFO  cxf.conn.log -
+				client connected conn=[id: 0x6cef5dfa, L:/192.168.1.106:8886 - R:/192.168.1.106:2725]

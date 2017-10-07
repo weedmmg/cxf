@@ -63,7 +63,7 @@ public final class ConnectionServer extends NettyTCPServer {
 
     @Override
     public void init() {
-        super.init(Integer.parseInt(prop.getProperty("netty.tcp.port")), prop.getProperty("netty.ip"));
+        super.init(Integer.parseInt(prop.getProperty("netty.tcp.port")), prop.getProperty("netty.id"));
 
         connectionManager.init();
 

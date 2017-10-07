@@ -7,13 +7,14 @@ E:\cxf\cxf\src\main\java\com\cxf\netty\tcp\TcpDecode.java
 E:\cxf\cxf\src\main\java\com\cxf\util\event\ConnectionConnectEvent.java
 E:\cxf\cxf\src\main\java\com\cxf\netty\connection\SessionContext.java
 E:\cxf\cxf\src\main\java\com\cxf\netty\Server.java
+E:\cxf\cxf\src\main\java\com\cxf\netty\websocket\WebSocketIndexPageHandler.java
 E:\cxf\cxf\src\main\java\com\cxf\netty\connection\ConnectionManager.java
 E:\cxf\cxf\src\main\java\com\cxf\thread\NamedThreadFactory.java
 E:\cxf\cxf\src\main\java\com\cxf\util\Strings.java
+E:\cxf\cxf\src\main\java\com\cxf\netty\websocket\WebsocketServer.java
 E:\cxf\cxf\src\main\java\com\cxf\netty\connection\ServerConnectionManager.java
 E:\cxf\cxf\src\main\java\com\cxf\netty\tcp\TcpEncode.java
 E:\cxf\cxf\src\main\java\com\cxf\netty\api\Listener.java
-E:\cxf\cxf\src\main\java\com\cxf\netty\http\ServerHttpHandler.java
 E:\cxf\cxf\src\main\java\com\cxf\netty\ChannelType.java
 E:\cxf\cxf\src\main\java\com\cxf\netty\ServerBootstrapFactory.java
 E:\cxf\cxf\src\main\java\com\cxf\util\event\Event.java
@@ -24,6 +25,7 @@ E:\cxf\cxf\src\main\java\com\cxf\util\ByteUtil.java
 E:\cxf\cxf\src\main\java\com\cxf\util\MD5Util.java
 E:\cxf\cxf\src\main\java\com\cxf\netty\api\Server.java
 E:\cxf\cxf\src\main\java\com\cxf\netty\connection\NettyConnection.java
+E:\cxf\cxf\src\main\java\com\cxf\netty\websocket\WebSocketChannelHandler.java
 E:\cxf\cxf\src\main\java\com\cxf\util\PropertiesUtil.java
 E:\cxf\cxf\src\main\java\com\cxf\netty\tcp\ServerTCPChannelFactory.java
 E:\cxf\cxf\src\main\java\com\cxf\netty\tcp\NettyTCPServer.java

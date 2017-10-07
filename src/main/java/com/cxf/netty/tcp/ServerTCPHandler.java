@@ -67,7 +67,11 @@ public class ServerTCPHandler extends ChannelInboundHandlerAdapter {
             if (sendConnection != null) {
 
                 sendConnection.getChannel().attr(NettyTCPServer.sendChannel).set("");
-                sendConnection.getChannel().writeAndFlush(new TextWebSocketFrame(ctx.channel().id() + " 长连接断开！"));
+                Map<String, Object> resultMap = new HashMap<String, Object>();
+                resultMap.put("code", "-1");
+                resultMap.put("msg", ctx.channel().id() + " 长连接断开！");
+
+                sendConnection.getChannel().writeAndFlush(new TextWebSocketFrame(new JSONObject(resultMap).toString()));
             }
         }
 

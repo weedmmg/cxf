@@ -156,7 +156,22 @@ public class Msg {
         paramMap.put("uuid", "123456");
     }
 
+    /**
+     * 检验和
+     * 
+     * @param msg
+     * @param sign
+     * @return
+     */
     public static boolean checkSign(byte[] msg, byte[] sign) {
+        byte[] msgSign = ByteUtil.sumCheck(msg, 1);
+        if (ByteUtil.printHexString(msgSign).equals(ByteUtil.printHexString(sign))) {
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean checkSign2(byte[] msg, byte[] sign) {
         String msgSign = MD5Util.string2MD5(new String(msg));
 
         if (msgSign.equals(new String(sign))) {
@@ -186,7 +201,7 @@ public class Msg {
     }
 
     public static void main(String[] args) {
-        String headStr = "EX", endStr = "86";
+        String headStr = "EC", endStr = "68";
         byte cmd = 0x01;
         String uuid = UUID.randomUUID().toString();
         logger.debug(uuid);
@@ -197,8 +212,11 @@ public class Msg {
             msg = intMsg(cmd, uuid.getBytes(encoding));
 
             String sign = MD5Util.string2MD5(new String(msg));
+            byte[] signs = ByteUtil.sumCheck(msg, 1);
+            String s = ByteUtil.printHexString(signs);
+            System.out.println("he:" + s);
 
-            byte[] newMsg = ByteUtil.byteMergerAll(head, msg, sign.getBytes(encoding), end);
+            byte[] newMsg = ByteUtil.byteMergerAll(head, msg, signs, end);
 
             logger.debug(sign);
             logger.debug("加密后" + newMsg.length);

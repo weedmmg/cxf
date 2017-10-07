@@ -6,9 +6,11 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.cxf.logger.Logs;
 import com.cxf.netty.connection.Connection;
 import com.cxf.netty.connection.ConnectionManager;
@@ -26,6 +28,8 @@ import com.cxf.util.event.EventBus;
 public class WebSocketChannelHandler extends SimpleChannelInboundHandler<WebSocketFrame> {
 
     private final ConnectionManager connectionManager;
+
+    Map<String, Object> resultMap = new HashMap<String, Object>();
 
     public WebSocketChannelHandler(ConnectionManager connectionManager) {
         this.connectionManager = connectionManager;
@@ -61,7 +65,11 @@ public class WebSocketChannelHandler extends SimpleChannelInboundHandler<WebSock
                     Logs.WS.error("push modify time error:" + e.getMessage());
                 }
             }
-            ctx.writeAndFlush(new TextWebSocketFrame("send ok!"));
+
+            resultMap.put("code", "0");
+            resultMap.put("msg", "执行成功");
+
+            ctx.writeAndFlush(new TextWebSocketFrame(new JSONObject(resultMap).toString()));
             Logs.WS.debug("msg:" + message);
             // LOGGER.debug("channelRead conn={}, packet={}", ctx.channel(),
             // connection.getSessionContext(), packet);
