@@ -6,9 +6,10 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,9 @@ public class Msg {
     private static Logger logger = LoggerFactory.getLogger(Msg.class);
     private final static byte errorCmd = 0x04;
     private final static byte successCmd = 0x02;
+
+    private static final String NUM_FORMAT = "00000";
+    private static final DecimalFormat df = new DecimalFormat(NUM_FORMAT);
 
     public static byte[] conventMsg(Object msg, ChannelHandlerContext ctx, ConnectionManager connectionManager) throws UnsupportedEncodingException {
         ByteBuf totalBytes = Unpooled.wrappedBuffer((byte[]) msg);
@@ -54,14 +58,14 @@ public class Msg {
             logger.error("sign error");
             return intMsg(errorCmd, "sign error".getBytes(encoding));
         }
-        handleMsg(cmds[0], datas, ctx, connectionManager);
+        handleMsg(cmds[0], datas, ctx, connectionManager, len);
         return intMsg(successCmd, "ok".getBytes(encoding));
 
     }
 
-    public static void handleMsg(byte cmd, byte[] data, ChannelHandlerContext ctx, ConnectionManager connectionManager) {
+    public static void handleMsg(byte cmd, byte[] data, ChannelHandlerContext ctx, ConnectionManager connectionManager, int len) {
 
-        logger.info("channelId:" + ctx.channel().id());
+        // logger.info("channelId:" + ctx.channel().id());
         Map<String, Object> paramMap = new HashMap<String, Object>();
         String url = "", channelId = "";
 
@@ -69,18 +73,18 @@ public class Msg {
         switch (cmd) {
         case 0x01:
             // regist
-            String uuid = new String(data);
+            String uuid = "" + ByteUtil.byteArrayToInt(data, len);
             if (Strings.isBlank(uuid)) {
                 logger.error("error UUID is null:" + uuid);
                 break;
             }
-
             url = PropertiesUtil.getValue("system.register.url");
             if (Strings.isBlank(url)) {
                 logger.error("error system.register.url is null:" + url);
                 break;
             }
 
+            ctx.channel().attr(NettyTCPServer.uid).set(uuid);
             paramMap.put("uuid", uuid);
             paramMap.put("channelId", ctx.channel().id().toString());
             paramMap.put("serverIp", PropertiesUtil.getValue("netty.ip"));
@@ -106,6 +110,8 @@ public class Msg {
                 paramMap.put("channelId", ctx.channel().id().toString());
                 paramMap.put("serverIp", PropertiesUtil.getValue("netty.ip"));
                 initLocationMap(paramMap, data);
+                paramMap.put("uuid", ctx.channel().attr(NettyTCPServer.uid).get());
+                logger.debug("result:" + new JSONObject(paramMap).toString());
                 ctx.executor().submit(new UrlThreadFactory(url, new JSONObject(paramMap).toString()));
             }
 
@@ -134,26 +140,41 @@ public class Msg {
     }
 
     public static void initLocationMap(Map<String, Object> paramMap, byte[] data) {
-        ByteBuf dataBytes = Unpooled.wrappedBuffer(data), stateBytes = dataBytes.slice(0, 1), nssBytes = dataBytes.slice(1, 1), ewsBytes = dataBytes.slice(2, 1), speedBytes = dataBytes.slice(3, 2), llBytes = dataBytes
-                .slice(5, 4), laBytes = dataBytes.slice(9, 4), statusBytes = dataBytes.slice(13, 1);
+        ByteBuf dataBytes = Unpooled.wrappedBuffer(data), stateBytes = dataBytes.slice(0, 1), nssBytes = dataBytes.slice(1, 1), ewsBytes = dataBytes.slice(2, 1), speedBytes1 = dataBytes.slice(3, 1), speedBytes2 = dataBytes
+                .slice(4, 1), llBytes1 = dataBytes.slice(5, 1), llBytes2 = dataBytes.slice(6, 3), laBytes1 = dataBytes.slice(9, 1), laBytes2 = dataBytes.slice(10, 3);
         // TODO 传输定位信息
-        byte[] states = new byte[1],
-        // nss = new byte[1], ews = new byte[1],
-        speeds = new byte[2], lls = new byte[4], las = new byte[4], status = new byte[1];
+        byte[] states = new byte[1], nss = new byte[1], ews = new byte[1], speeds1 = new byte[1], speeds2 = new byte[1], lls1 = new byte[1], lls2 = new byte[3], las1 = new byte[1], las2 = new byte[3];
 
         stateBytes.readBytes(states);
-        // dataBytes.readBytes(nss, 1, 1);
-        // dataBytes.readBytes(ews, 2, 1);
-        speedBytes.readBytes(speeds);
-        llBytes.readBytes(lls);
-        laBytes.readBytes(las);
-        statusBytes.readBytes(status);
-        paramMap.put("gpsstate", ByteUtil.byteArrayToLong(states, 1));
-        paramMap.put("longitude", (double) ByteUtil.byteArrayToLong(lls, 4) / 1000000);
-        paramMap.put("latitude", (double) ByteUtil.byteArrayToLong(las, 4) / 1000000);
-        paramMap.put("speed", ByteUtil.byteArrayToLong(speeds, 2));
-        paramMap.put("gpsstatus", ByteUtil.byteArrayToLong(status, 1));
-        paramMap.put("uuid", "123456");
+        nssBytes.readBytes(nss);
+        ewsBytes.readBytes(ews);
+        speedBytes1.readBytes(speeds1);
+        speedBytes2.readBytes(speeds2);
+        llBytes1.readBytes(lls1);
+        laBytes1.readBytes(las1);
+        llBytes2.readBytes(lls2);
+        laBytes2.readBytes(las2);
+        // logger.debug("ss:" + ByteUtil.printHexString(lls1) + "." + "ss:" +
+        // ByteUtil.printHexString(lls2));
+        float speeds;
+        try {
+            speeds = (float) (ByteUtil.byteArrayToInt(speeds1, 1) * 100 + ByteUtil.byteArrayToInt(speeds2, 1)) / 100;
+        } catch (Exception e) {
+            speeds = 0;
+            logger.error(e.getMessage());
+        }
+
+        BigDecimal lls = new BigDecimal(ByteUtil.byteArrayToInt(lls1, 1) + "." + df.format(ByteUtil.byteArrayToInt(lls2, 3)));
+        BigDecimal las = new BigDecimal(ByteUtil.byteArrayToInt(las1, 1) + "." + df.format(ByteUtil.byteArrayToInt(las2, 3)));
+        // statusBytes.readBytes(status);
+        paramMap.put("gpsstate", ByteUtil.byteArrayToInt(states, 1));
+        paramMap.put("longitude", lls.doubleValue());
+        paramMap.put("latitude", las.doubleValue());
+        paramMap.put("speed", speeds);
+        paramMap.put("gpsstatus", "");
+        paramMap.put("nss", ByteUtil.byteArrayToInt(nss, 1));
+        paramMap.put("ews", ByteUtil.byteArrayToInt(ews, 1));
+
     }
 
     /**
@@ -201,30 +222,17 @@ public class Msg {
     }
 
     public static void main(String[] args) {
-        String headStr = "EC", endStr = "68";
-        byte cmd = 0x01;
-        String uuid = UUID.randomUUID().toString();
-        logger.debug(uuid);
-        byte[] head, end, msg;
+        String temp = "EC010400989680B368";
+
+        BigDecimal lls = new BigDecimal("11." + df.format(123));
+        logger.debug(":::" + lls.doubleValue());
+
+        byte[] temps = ByteUtil.hexString2Bytes(temp);
+
         try {
-            head = headStr.getBytes(encoding);
-            end = endStr.getBytes(encoding);
-            msg = intMsg(cmd, uuid.getBytes(encoding));
-
-            String sign = MD5Util.string2MD5(new String(msg));
-            byte[] signs = ByteUtil.sumCheck(msg, 1);
-            String s = ByteUtil.printHexString(signs);
-            System.out.println("he:" + s);
-
-            byte[] newMsg = ByteUtil.byteMergerAll(head, msg, signs, end);
-
-            logger.debug(sign);
-            logger.debug("加密后" + newMsg.length);
-            System.out.println("len:" + newMsg.toString().length());
-
-            System.out.println(Msg.conventMsg(newMsg, null, null));
-
+            Msg.conventMsg(temps, null, null);
         } catch (UnsupportedEncodingException e) {
+            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
