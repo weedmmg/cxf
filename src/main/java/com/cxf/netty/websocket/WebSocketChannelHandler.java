@@ -83,7 +83,7 @@ public class WebSocketChannelHandler extends SimpleChannelInboundHandler<WebSock
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         Connection connection = connectionManager.get(ctx.channel());
-        Logs.CONN.error("client caught ex, conn={}", connection);
+        Logs.CONN.debug("client caught ex, conn={}", connection);
 
         ctx.close();
     }

@@ -79,7 +79,7 @@ public abstract class NettyTCPServer extends BaseService implements Server {
         if (!serverState.compareAndSet(State.Started, State.Shutdown)) {
             if (listener != null)
                 listener.onFailure(new ServiceException("server was already shutdown."));
-            Logs.TCP.error("{} was already shutdown.", this.getClass().getSimpleName());
+            Logs.TCP.debug("{} was already shutdown.", this.getClass().getSimpleName());
             return;
         }
         Logs.HB.info("try shutdown {}...", this.getClass().getSimpleName());
@@ -165,7 +165,7 @@ public abstract class NettyTCPServer extends BaseService implements Server {
                     if (listener != null)
                         listener.onSuccess(port);
                 } else {
-                    Logs.HB.error("server start failure on:{}", port, future.cause());
+                    Logs.HB.info("server start failure on:{}", port, future.cause());
                     if (listener != null)
                         listener.onFailure(future.cause());
                 }

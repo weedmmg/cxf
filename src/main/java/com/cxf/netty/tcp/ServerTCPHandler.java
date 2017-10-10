@@ -54,8 +54,8 @@ public class ServerTCPHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         Connection connection = connectionManager.get(ctx.channel());
-        Logs.CONN.error("client caught ex, conn={}", connection);
-        Logs.CONN.error("caught an ex, channel={}, conn={}", ctx.channel(), connection, cause);
+        // Logs.CONN.error("client caught ex, conn={}", connection);
+        Logs.CONN.debug("caught an ex, channel={}, conn={}", ctx.channel(), connection, cause.getMessage());
         ctx.close();
     }
 
@@ -78,7 +78,8 @@ public class ServerTCPHandler extends ChannelInboundHandlerAdapter {
         Connection connection = connectionManager.removeAndClose(ctx.channel());
 
         String url = PropertiesUtil.getValue("system.logout.url");
-        if (!Strings.isBlank(url)) {
+        String uuid = ctx.channel().attr(NettyTCPServer.uid).get();
+        if ((!Strings.isBlank(url)) && (!Strings.isBlank(uuid))) {
             Map<String, Object> paramMap = new HashMap<String, Object>();
             paramMap.put("channelId", ctx.channel().id().toString());
             paramMap.put("serverIp", PropertiesUtil.getValue("netty.ip"));

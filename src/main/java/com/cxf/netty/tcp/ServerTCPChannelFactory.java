@@ -1,11 +1,5 @@
 package com.cxf.netty.tcp;
 
-import java.net.InetSocketAddress;
-
-import com.cxf.logger.Logs;
-import com.cxf.netty.ChannelType;
-import com.cxf.netty.ServerBootstrapFactory;
-
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -18,6 +12,12 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+
+import java.net.InetSocketAddress;
+
+import com.cxf.logger.Logs;
+import com.cxf.netty.ChannelType;
+import com.cxf.netty.ServerBootstrapFactory;
 
 final class ServerTCPChannelFactory {
 
@@ -46,7 +46,7 @@ final class ServerTCPChannelFactory {
 
             }
         } catch (InterruptedException e) {
-            Logs.Console.error("Netty Server Create Exception:" + e.getMessage());
+            Logs.Console.debug("Netty Server Create Exception:" + e.getMessage());
         } finally {
             group.shutdownGracefully().sync();// 关闭EventLoopGroup，释放掉所有资源包括创建的线程
         }
