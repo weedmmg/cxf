@@ -28,7 +28,7 @@ public final class ServerLauncher {
 
     ConnectionServer server;
     WebsocketServer wsServer;
-    private final ConnectionManager connectionManager = new ServerConnectionManager(false);;
+    private final ConnectionManager connectionManager = new ServerConnectionManager(true);;
 
     public void init() {
         server = new ConnectionServer(connectionManager);

@@ -21,6 +21,11 @@ public class TcpDecode extends MessageToMessageDecoder<ByteBuf> {
 
             int index = 0;
             while (!Integer.toHexString(in.readByte() & 0xFF).toUpperCase().equals("EC")) {
+                if (index >= length - 1) {
+
+                    Logs.TCP.error("index:" + index + " length:" + length);
+                    return;
+                }
                 index++;
             }
             Logs.TCP.warn("index:" + index);
