@@ -55,7 +55,8 @@ public class Msg {
         signBytes.readBytes(signBytesArray);
 
         if (checkSign(checkBytesArray, signBytesArray)) {
-            logger.error("sign error");
+            logger.error("sign error data:" + ByteUtil.printHexString((byte[]) msg));
+
             return intMsg(errorCmd, "sign error".getBytes(encoding));
         }
         handleMsg(cmds[0], datas, ctx, connectionManager, len);
@@ -65,7 +66,7 @@ public class Msg {
 
     public static void handleMsg(byte cmd, byte[] data, ChannelHandlerContext ctx, ConnectionManager connectionManager, int len) {
 
-        // logger.info("channelId:" + ctx.channel().id());
+        logger.info("channelId:" + ctx.channel().id());
         Map<String, Object> paramMap = new HashMap<String, Object>();
         String url = "", channelId = "";
 
@@ -189,6 +190,7 @@ public class Msg {
         if (ByteUtil.printHexString(msgSign).equals(ByteUtil.printHexString(sign))) {
             return false;
         }
+        logger.error(ByteUtil.printHexString(msgSign) + "::" + ByteUtil.printHexString(sign));
         return true;
     }
 

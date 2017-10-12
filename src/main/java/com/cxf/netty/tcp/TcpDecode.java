@@ -19,16 +19,6 @@ public class TcpDecode extends MessageToMessageDecoder<ByteBuf> {
             in.getBytes(0, array);
             Logs.TCP.warn("receive msg:" + ByteUtil.printHexString(array));
 
-            int index = 0;
-            while (!Integer.toHexString(in.readByte() & 0xFF).toUpperCase().equals("EC")) {
-                if (index >= length - 1) {
-
-                    Logs.TCP.error("index:" + index + " length:" + length);
-                    return;
-                }
-                index++;
-            }
-            Logs.TCP.warn("index:" + index);
             ByteBuf cmdBytes = in.slice(1, 1), lenBytes = in.slice(2, 1);
 
             byte[] cmds = new byte[1], lens = new byte[1];
@@ -55,7 +45,7 @@ public class TcpDecode extends MessageToMessageDecoder<ByteBuf> {
                 out.add(newArray);
                 break;
             default:
-                in.skipBytes(5 + len);
+                // in.skipBytes(5 + len);
                 break;
             }
 

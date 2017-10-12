@@ -18,6 +18,7 @@ E:\cxf\cxf\src\main\java\com\cxf\netty\api\Listener.java
 E:\cxf\cxf\src\main\java\com\cxf\netty\ChannelType.java
 E:\cxf\cxf\src\main\java\com\cxf\netty\ServerBootstrapFactory.java
 E:\cxf\cxf\src\main\java\com\cxf\util\event\Event.java
+E:\cxf\cxf\src\main\java\com\cxf\netty\tcp\PackDecoder.java
 E:\cxf\cxf\src\main\java\com\cxf\netty\api\FutureListener.java
 E:\cxf\cxf\src\main\java\com\cxf\netty\tcp\convent\Msg.java
 E:\cxf\cxf\src\main\java\com\cxf\thread\ThreadNames.java

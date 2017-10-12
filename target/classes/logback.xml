@@ -3,7 +3,7 @@
 <configuration scan="true" scanPeriod="3 seconds">
 	<!--设置日志输出为控制台 -->
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+	<filter class="ch.qos.logback.classic.filter.LevelFilter">
 			<level>ERROR</level>
 			<onMatch>ACCEPT</onMatch>
 			<onMismatch>DENY</onMismatch>

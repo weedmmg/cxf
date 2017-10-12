@@ -17,6 +17,7 @@ import com.cxf.netty.connection.ConnectionManager;
 import com.cxf.netty.connection.NettyConnection;
 import com.cxf.netty.tcp.NettyTCPServer;
 import com.cxf.netty.tcp.convent.Msg;
+import com.cxf.util.ByteUtil;
 import com.cxf.util.Strings;
 import com.cxf.util.event.ConnectionCloseEvent;
 import com.cxf.util.event.EventBus;
@@ -40,34 +41,59 @@ public class WebSocketChannelHandler extends SimpleChannelInboundHandler<WebSock
         if (frame instanceof TextWebSocketFrame) {
 
             String message = frame.content().toString(io.netty.util.CharsetUtil.UTF_8);
-            Connection connection = connectionManager.get(ctx.channel());
+
             Map<String, Object> paramMap = JSON.parseObject(message);
 
-            String channelId = String.valueOf(paramMap.get("channelId"));
-            String times = String.valueOf(paramMap.get("times"));
-            if (Strings.isBlank(channelId) || Strings.isBlank(times)) {
-                Logs.WS.error("error channelId:" + channelId + " or times: " + times + " is null.");
-                ctx.writeAndFlush("error channelId:" + channelId + " or times: " + times + " is null.");
-                return;
-            }
-            ctx.channel().attr(NettyTCPServer.sendChannel).set(channelId);
-
-            Connection sendConnection = connectionManager.getById(channelId);
-            if (sendConnection != null) {
-                sendConnection.getChannel().attr(NettyTCPServer.rcvChannel).set(ctx.channel().id().toString());
-                Logs.WS.info("set receve id:" + ctx.channel().id().toString());
-                byte cmd = 0x03;
-                try {
-                    byte[] pushMsg = Msg.intMsg(cmd, times.getBytes("utf8"));
-                    sendConnection.send(pushMsg);
-
-                } catch (Exception e) {
-                    Logs.WS.error("push modify time error:" + e.getMessage());
-                }
-            }
+            String channelId = String.valueOf(paramMap.get("channelId")), times = String.valueOf(paramMap.get("times")), sign = String.valueOf(paramMap.get("sign")), data = String.valueOf(paramMap
+                    .get("data"));
 
             resultMap.put("code", "0");
             resultMap.put("msg", "执行成功");
+
+            if (Strings.isBlank(channelId)) {
+                Logs.WS.error("error channelId:" + channelId + " is null.");
+                ctx.writeAndFlush(new TextWebSocketFrame(new JSONObject(resultMap).toString()));
+                return;
+            }
+
+            if (!Strings.isBlank(times)) {
+                // 处理调整频率代码
+                ctx.channel().attr(NettyTCPServer.sendChannel).set(channelId);
+
+                Connection sendConnection = connectionManager.getById(channelId);
+                if (sendConnection != null) {
+                    sendConnection.getChannel().attr(NettyTCPServer.rcvChannel).set(ctx.channel().id().toString());
+                    Logs.WS.info("set receve id:" + ctx.channel().id().toString());
+                    byte cmd = 0x03;
+                    try {
+                        byte[] pushMsg = Msg.intMsg(cmd, times.getBytes("utf8"));
+                        sendConnection.send(pushMsg);
+
+                    } catch (Exception e) {
+                        Logs.WS.error("push modify time error:" + e.getMessage());
+                    }
+                }
+            }
+
+            if (!Strings.isBlank(sign)) {
+                // 处理自定义代码
+                ctx.channel().attr(NettyTCPServer.sendChannel).set(channelId);
+
+                Connection sendConnection = connectionManager.getById(channelId);
+                if (sendConnection != null) {
+                    sendConnection.getChannel().attr(NettyTCPServer.rcvChannel).set(ctx.channel().id().toString());
+                    Logs.WS.info("set receve id:" + ctx.channel().id().toString());
+                    byte cmd = 0x06;
+                    try {
+                        int signInt = Integer.valueOf(sign), dataInt = Integer.valueOf(data);
+                        byte[] pushMsg = Msg.intMsg(cmd, ByteUtil.byteMerger(ByteUtil.intToByteArray(signInt, 1), ByteUtil.intToByteArray(dataInt, 4)));
+                        sendConnection.send(pushMsg);
+
+                    } catch (Exception e) {
+                        Logs.WS.error("push modify time error:" + e.getMessage());
+                    }
+                }
+            }
 
             ctx.writeAndFlush(new TextWebSocketFrame(new JSONObject(resultMap).toString()));
             Logs.WS.debug("msg:" + message);
