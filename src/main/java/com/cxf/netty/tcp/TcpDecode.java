@@ -19,7 +19,7 @@ public class TcpDecode extends MessageToMessageDecoder<ByteBuf> {
             in.getBytes(0, array);
             Logs.TCP.warn("receive msg:" + ByteUtil.printHexString(array));
 
-            ByteBuf cmdBytes = in.slice(1, 1), lenBytes = in.slice(2, 1);
+            ByteBuf cmdBytes = in.slice(0, 1), lenBytes = in.slice(1, 1);
 
             byte[] cmds = new byte[1], lens = new byte[1];
 
@@ -32,15 +32,21 @@ public class TcpDecode extends MessageToMessageDecoder<ByteBuf> {
 
             switch (cmds[0]) {
             case 0x01:
-                newArray = new byte[5 + len];
-                msgByte = in.slice(0, 5 + len);
+                newArray = new byte[3 + len];
+                msgByte = in.slice(0, 3 + len);
                 msgByte.readBytes(newArray);
                 out.add(newArray);
                 break;
 
             case (byte) 0xBE:
-                newArray = new byte[5 + len];
-                msgByte = in.slice(0, 5 + len);
+                newArray = new byte[3 + len];
+                msgByte = in.slice(0, 3 + len);
+                msgByte.readBytes(newArray);
+                out.add(newArray);
+                break;
+            case (byte) 0x08:
+                newArray = new byte[3 + len];
+                msgByte = in.slice(0, 3 + len);
                 msgByte.readBytes(newArray);
                 out.add(newArray);
                 break;

@@ -70,6 +70,7 @@ public class WebSocketChannelHandler extends SimpleChannelInboundHandler<WebSock
                         sendConnection.send(pushMsg);
 
                     } catch (Exception e) {
+                        e.printStackTrace();
                         Logs.WS.error("push modify time error:" + e.getMessage());
                     }
                 }
@@ -90,7 +91,8 @@ public class WebSocketChannelHandler extends SimpleChannelInboundHandler<WebSock
                         sendConnection.send(pushMsg);
 
                     } catch (Exception e) {
-                        Logs.WS.error("push modify time error:" + e.getMessage());
+                        e.printStackTrace();
+                        Logs.WS.error("push sign error:" + e.getMessage());
                     }
                 }
             }

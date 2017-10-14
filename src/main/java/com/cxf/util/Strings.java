@@ -29,7 +29,7 @@ public final class Strings {
     public static final String EMPTY = "";
 
     public static boolean isBlank(CharSequence text) {
-        if (text == null || text.length() == 0)
+        if (text == null || text.length() == 0 || text.equals("null"))
             return true;
         for (int i = 0, L = text.length(); i < L; i++) {
             if (!Character.isWhitespace(text.charAt(i)))

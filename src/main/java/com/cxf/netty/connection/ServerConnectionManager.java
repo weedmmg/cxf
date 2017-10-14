@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import com.cxf.logger.Logs;
 import com.cxf.thread.NamedThreadFactory;
 import com.cxf.thread.ThreadNames;
 import com.cxf.util.PropertiesUtil;
@@ -155,20 +156,17 @@ public final class ServerConnectionManager implements ConnectionManager {
 
             if (connection == null || !connection.isConnected()) {
 
-                // Logs.HB.info("heartbeat timeout times={}, connection disconnected, conn={}",
-                // timeoutTimes, connection);
+                Logs.HB.info("heartbeat timeout times={}, connection disconnected, conn={}", timeoutTimes, connection);
                 return;
             }
 
             if (connection.isReadTimeout()) {
                 if (++timeoutTimes > Integer.valueOf((PropertiesUtil.getValue("max-hb-timeout-times")))) {
                     connection.close();
-                    // Logs.HB.warn("client heartbeat timeout times={}, do close conn={}",
-                    // timeoutTimes, connection);
+                    Logs.HB.warn("client heartbeat timeout times={}, do close conn={}", timeoutTimes, connection);
                     return;
                 } else {
-                    // Logs.HB.info("client heartbeat timeout times={}, connection={}",
-                    // timeoutTimes, connection);
+                    Logs.HB.info("client heartbeat timeout times={}, connection={}", timeoutTimes, connection);
                 }
             } else {
                 timeoutTimes = 0;

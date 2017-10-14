@@ -55,7 +55,7 @@ public class ServerTCPHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         Connection connection = connectionManager.get(ctx.channel());
         // Logs.CONN.error("client caught ex, conn={}", connection);
-        Logs.CONN.debug("caught an ex, channel={}, conn={}", ctx.channel(), connection, cause.getMessage());
+        Logs.CONN.debug("caught an ex, channel={}, conn={} exception={}", ctx.channel(), connection, cause);
         ctx.close();
     }
 

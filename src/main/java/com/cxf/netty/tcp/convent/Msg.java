@@ -36,17 +36,20 @@ public class Msg {
     private static final DecimalFormat df = new DecimalFormat(NUM_FORMAT);
 
     public static byte[] conventMsg(Object msg, ChannelHandlerContext ctx, ConnectionManager connectionManager) throws UnsupportedEncodingException {
+
         ByteBuf totalBytes = Unpooled.wrappedBuffer((byte[]) msg);
-        ByteBuf cmdBytes = totalBytes.slice(1, 1), lenBytes = totalBytes.slice(2, 1);
+        ByteBuf cmdBytes = totalBytes.slice(0, 1), lenBytes = totalBytes.slice(1, 1);
 
         byte[] cmds = new byte[1], lens = new byte[1];
 
         cmdBytes.readBytes(cmds);
         lenBytes.readBytes(lens);
 
-        int totalLengh = totalBytes.readableBytes(), len = ByteUtil.byteArrayToInt(lens, 1), signLen = totalLengh - 4 - len;
+        int totalLengh = totalBytes.readableBytes(), len = ByteUtil.byteArrayToInt(lens, 1), signLen = 1;
 
-        ByteBuf dataBytes = totalBytes.slice(3, len), signBytes = totalBytes.slice(3 + len, signLen), checkBytes = totalBytes.slice(1, 2 + len);
+        ByteBuf dataBytes = totalBytes.slice(2, len);
+        ByteBuf signBytes = totalBytes.slice(2 + len, signLen);
+        ByteBuf checkBytes = totalBytes.slice(0, 2 + len);
         byte[] datas = new byte[len];
         dataBytes.readBytes(datas);
         byte[] checkBytesArray = new byte[2 + len], signBytesArray = new byte[signLen];
@@ -57,10 +60,10 @@ public class Msg {
         if (checkSign(checkBytesArray, signBytesArray)) {
             logger.error("sign error data:" + ByteUtil.printHexString((byte[]) msg));
 
-            return intMsg(errorCmd, "sign error".getBytes(encoding));
+            return intMsg(errorCmd, ByteUtil.intToByteArray(2, 1));
         }
         handleMsg(cmds[0], datas, ctx, connectionManager, len);
-        return intMsg(successCmd, "ok".getBytes(encoding));
+        return intMsg(successCmd, ByteUtil.intToByteArray(1, 1));
 
     }
 
@@ -97,6 +100,34 @@ public class Msg {
         case 0x05:
             // heartbeat
             break;
+        case 0x08:
+            ByteBuf dataBytes = Unpooled.wrappedBuffer(data),
+            cmdBytes = dataBytes.slice(0, 1),
+            stateBytes = dataBytes.slice(1, 1);
+            byte[] cmds = new byte[1],
+            states = new byte[1];
+            stateBytes.readBytes(states);
+            cmdBytes.readBytes(cmds);
+            paramMap.put("code", "0");
+            paramMap.put("msg", "channelId:" + ctx.channel().id() + "执行" + ByteUtil.byteArrayToInt(cmds, 1) + " 结果：" + ByteUtil.byteArrayToInt(states, 1));
+
+            // Logs.WS.info("get info:" + new JSONObject(paramMap).toString());
+            channelId = ctx.channel().attr(NettyTCPServer.rcvChannel).get();
+            if (!Strings.isBlank(channelId)) {
+                try {
+                    Connection rcvConnection = connectionManager.getById(channelId);
+
+                    if (rcvConnection != null) {
+                        rcvConnection.send(new TextWebSocketFrame(new JSONObject(paramMap).toString()));
+                        Logs.WS.info("send result msg:" + new JSONObject(paramMap).toString());
+                    }
+
+                    break;
+                } catch (Exception e) {
+                    Logs.WS.error("push result error:" + e.getMessage());
+                }
+            }
+            break;
 
         case (byte) 0xBE:
             // location
@@ -129,7 +160,7 @@ public class Msg {
 
                     break;
                 } catch (Exception e) {
-                    Logs.WS.error("push modify time error:" + e.getMessage());
+                    Logs.WS.error("push location error:" + e.getMessage());
                 }
             }
 

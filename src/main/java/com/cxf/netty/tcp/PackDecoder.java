@@ -11,7 +11,7 @@ import com.cxf.util.ByteUtil;
 public class PackDecoder extends LengthFieldBasedFrameDecoder {
 
     public PackDecoder() {
-        super(16 * 1024, 2, 1, 2, 0);
+        super(16 * 1024, 1, 1, 2, 0);
     }
 
     public PackDecoder(int maxFrameLength, int lengthFieldOffset, int lengthFieldLength, int lengthAdjustment, int initialBytesToStrip) {
@@ -22,6 +22,23 @@ public class PackDecoder extends LengthFieldBasedFrameDecoder {
     @Override
     protected final Object decode(ChannelHandlerContext ctx, ByteBuf in) {
         int readIndex = in.readerIndex();
+        int length = in.readableBytes();
+        // Logs.TCP.error("tcp packge length:" + readIndex);
+        String str = Integer.toHexString(in.readByte() & 0xFF).toUpperCase();
+        // Logs.TCP.error("head:" + str);
+        int index = 0;
+        while (!str.equals("EC")) {
+            if (length > 1) {
+                length--;
+                str = Integer.toHexString(in.readByte() & 0xFF).toUpperCase();
+
+                // Logs.TCP.error(str + "dataStr:" + length);
+
+            } else {
+                return null;
+            }
+
+        }
 
         try {
             Object obj = super.decode(ctx, in);
@@ -30,7 +47,7 @@ public class PackDecoder extends LengthFieldBasedFrameDecoder {
             }
         } catch (Exception e) {
             in.readerIndex(readIndex);
-            int length = in.readableBytes();
+            // int length = in.readableBytes();
             byte[] array = new byte[length];
             in.getBytes(0, array);
             e.printStackTrace();

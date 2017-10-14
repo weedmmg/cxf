@@ -259,7 +259,7 @@ public class ByteUtil {
 
         byte[] ll1s = ByteUtil.longToByteArray(ll1, 4), las1 = ByteUtil.longToByteArray(la1, 4);
 
-        System.out.println(ll1s.length + "::" + las1.length);
+        System.out.println(ByteUtil.byteArrayToInt(ByteUtil.intToByteArray(-1, 1), 1) + "::" + las1.length);
         System.out.println(ByteUtil.byteArrayToLong(ll1s, 4) + "::" + ByteUtil.byteArrayToLong(las1, 4));
 
         // 鍒濆鍖栨祴璇曟暟鎹�
