@@ -44,6 +44,13 @@ public class TcpDecode extends MessageToMessageDecoder<ByteBuf> {
                 msgByte.readBytes(newArray);
                 out.add(newArray);
                 break;
+
+            case (byte) 0xBC:
+                newArray = new byte[3 + len];
+                msgByte = in.slice(0, 3 + len);
+                msgByte.readBytes(newArray);
+                out.add(newArray);
+                break;
             case (byte) 0x08:
                 newArray = new byte[3 + len];
                 msgByte = in.slice(0, 3 + len);

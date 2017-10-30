@@ -251,17 +251,15 @@ public class ByteUtil {
 
     public static void main(String[] args) throws IOException {
 
-        double ll = 121.552298, la = 29.820054;
+        String errorInfo = // "ecbc19011411a1b101600501100019461411a1b101f02568".toUpperCase();
+        "bc19000114110a1b1016000005000110000001094614110a1b101f00".toUpperCase();
 
-        long ll1 = 121552298, la1 = 29820054;
-
-        byte[] lls = ByteUtil.toByteArray(ll), las = ByteUtil.toByteArray(la);
-
-        byte[] ll1s = ByteUtil.longToByteArray(ll1, 4), las1 = ByteUtil.longToByteArray(la1, 4);
-
-        System.out.println(ByteUtil.byteArrayToInt(ByteUtil.intToByteArray(-1, 1), 1) + "::" + las1.length);
-        System.out.println(ByteUtil.byteArrayToLong(ll1s, 4) + "::" + ByteUtil.byteArrayToLong(las1, 4));
-
+        // "ECBE0D010101026E770160AA1F012AE5EF68";
+        // "ECBE0D010101026E770160AA1F012AE5EF68EC05000568ECBE0D010101026E770160AA1F012AE5EF68EC05000568ECBE0D010101026E770160AA1F012AE5EF68";
+        // "770160AA1F012AE5EF68ECBE0D010101026E770160AA1F012AE5EF68EC05000568ECBE0D010101026E770160AA1F012AE5EF68ECBE0D0101EC0500BE68ECBE0D010101026E770160AA1F012AE5EF68EC05000568ECBE0D010101026E770160AA1F012AE5EF";
+        byte[] array = ByteUtil.hexString2Bytes(errorInfo);
+        byte[] msgSign = ByteUtil.sumCheck(array, 1);
+        System.out.println(ByteUtil.printHexString(msgSign).trim());
         // 鍒濆鍖栨祴璇曟暟鎹�
         // byte[] msg = new byte[429], b = new byte[1];
         // for (int i = 0; i < msg.length; i++) {

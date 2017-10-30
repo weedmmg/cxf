@@ -44,8 +44,8 @@ public class WebSocketChannelHandler extends SimpleChannelInboundHandler<WebSock
 
             Map<String, Object> paramMap = JSON.parseObject(message);
 
-            String channelId = String.valueOf(paramMap.get("channelId")), times = String.valueOf(paramMap.get("times")), sign = String.valueOf(paramMap.get("sign")), data = String.valueOf(paramMap
-                    .get("data"));
+            String channelId = String.valueOf(paramMap.get("channelId")), times = String.valueOf(paramMap.get("times")), cmdstr = String.valueOf(paramMap.get("cmd")), sign = String.valueOf(paramMap
+                    .get("sign")), data = String.valueOf(paramMap.get("data"));
 
             resultMap.put("code", "0");
             resultMap.put("msg", "执行成功");
@@ -67,6 +67,27 @@ public class WebSocketChannelHandler extends SimpleChannelInboundHandler<WebSock
                     byte cmd = 0x03;
                     try {
                         byte[] pushMsg = Msg.intMsg(cmd, times.getBytes("utf8"));
+                        sendConnection.send(pushMsg);
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Logs.WS.error("push modify time error:" + e.getMessage());
+                    }
+                }
+            }
+
+            if (!Strings.isBlank(cmdstr)) {
+                // 处理调整频率代码
+                ctx.channel().attr(NettyTCPServer.sendChannel).set(channelId);
+
+                Connection sendConnection = connectionManager.getById(channelId);
+                if (sendConnection != null) {
+                    sendConnection.getChannel().attr(NettyTCPServer.rcvChannel).set(ctx.channel().id().toString());
+                    Logs.WS.info("set receve id:" + ctx.channel().id().toString());
+                    byte cmd = 0x09;
+                    try {
+                        int cmdInt = Integer.valueOf(cmdstr), dataInt = Integer.valueOf(data);
+                        byte[] pushMsg = Msg.intMsg(cmd, ByteUtil.byteMerger(ByteUtil.intToByteArray(cmdInt, 1), ByteUtil.intToByteArray(dataInt, 2)));
                         sendConnection.send(pushMsg);
 
                     } catch (Exception e) {

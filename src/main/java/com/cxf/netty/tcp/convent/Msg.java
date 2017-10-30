@@ -8,7 +8,10 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -21,6 +24,7 @@ import com.cxf.netty.connection.ConnectionManager;
 import com.cxf.netty.tcp.NettyTCPServer;
 import com.cxf.thread.UrlThreadFactory;
 import com.cxf.util.ByteUtil;
+import com.cxf.util.DateUtil;
 import com.cxf.util.MD5Util;
 import com.cxf.util.PropertiesUtil;
 import com.cxf.util.Strings;
@@ -33,7 +37,11 @@ public class Msg {
     private final static byte successCmd = 0x02;
 
     private static final String NUM_FORMAT = "00000";
+    private static final String TIME_FORMAT = "00";
     private static final DecimalFormat df = new DecimalFormat(NUM_FORMAT);
+    private static final DecimalFormat timeDf = new DecimalFormat(TIME_FORMAT);
+
+    private static final String TIMEFORMAT = "yyyyMMddHHmmss";
 
     public static byte[] conventMsg(Object msg, ChannelHandlerContext ctx, ConnectionManager connectionManager) throws UnsupportedEncodingException {
 
@@ -45,7 +53,7 @@ public class Msg {
         cmdBytes.readBytes(cmds);
         lenBytes.readBytes(lens);
 
-        int totalLengh = totalBytes.readableBytes(), len = ByteUtil.byteArrayToInt(lens, 1), signLen = 1;
+        int len = ByteUtil.byteArrayToInt(lens, 1), signLen = 1;
 
         ByteBuf dataBytes = totalBytes.slice(2, len);
         ByteBuf signBytes = totalBytes.slice(2 + len, signLen);
@@ -82,13 +90,14 @@ public class Msg {
                 logger.error("error UUID is null:" + uuid);
                 break;
             }
+
+            ctx.channel().attr(NettyTCPServer.uid).set(uuid);
             url = PropertiesUtil.getValue("system.register.url");
             if (Strings.isBlank(url)) {
                 logger.error("error system.register.url is null:" + url);
                 break;
             }
 
-            ctx.channel().attr(NettyTCPServer.uid).set(uuid);
             paramMap.put("uuid", uuid);
             paramMap.put("channelId", ctx.channel().id().toString());
             paramMap.put("serverIp", PropertiesUtil.getValue("netty.ip"));
@@ -165,6 +174,42 @@ public class Msg {
             }
 
             break;
+
+        case (byte) 0xBC:
+
+            Logs.WS.info("基站数据  info:" + new JSONObject(paramMap).toString());
+            url = PropertiesUtil.getValue("system.jizhan.url");
+            if (Strings.isBlank(url)) {
+                logger.error("error system.jizhan.url is null:" + url);
+                break;
+            }
+
+            if (ctx != null) {
+
+                paramMap.put("channelId", ctx.channel().id().toString());
+                paramMap.put("serverIp", PropertiesUtil.getValue("netty.ip"));
+                initJizhanMap(paramMap, data);
+                paramMap.put("uuid", ctx.channel().attr(NettyTCPServer.uid).get());
+                logger.debug("result:" + new JSONObject(paramMap).toString());
+                ctx.executor().submit(new UrlThreadFactory(url, new JSONObject(paramMap).toString()));
+            }
+            channelId = ctx.channel().attr(NettyTCPServer.rcvChannel).get();
+            if (!Strings.isBlank(channelId)) {
+                try {
+                    Connection rcvConnection = connectionManager.getById(channelId);
+
+                    if (rcvConnection != null) {
+
+                        rcvConnection.send(new TextWebSocketFrame(new JSONObject(paramMap).toString()));
+                        Logs.WS.info("send jizhan msg:" + new JSONObject(paramMap).toString());
+                    }
+
+                    break;
+                } catch (Exception e) {
+                    Logs.WS.error("push jizhan error:" + e.getMessage());
+                }
+            }
+            break;
         default:
             logger.error("error cmd" + Byte.toString(cmd));
             break;
@@ -207,6 +252,59 @@ public class Msg {
         paramMap.put("nss", ByteUtil.byteArrayToInt(nss, 1));
         paramMap.put("ews", ByteUtil.byteArrayToInt(ews, 1));
 
+    }
+
+    public static void initJizhanMap(Map<String, Object> paramMap, byte[] data) {
+        paramMap.put("nettype", ByteUtil.byteArrayToInt(new byte[] { data[0], data[1] }, 2));
+        paramMap.put("frerange", "");
+        paramMap.put("basetime", getTime(data, 2));
+        paramMap.put("timerange", ByteUtil.byteArrayToInt(new byte[] { data[9], data[10] }, 2));
+        int count = ByteUtil.byteArrayToInt(new byte[] { data[11], data[12] }, 2);
+        paramMap.put("equirange", count);
+
+        List<Map> list = new ArrayList<Map>();
+        for (int i = 0; i < count; i++) {
+            Map<String, Object> map = new HashMap<String, Object>();
+            map.put("carid", getCarId(data, i * 13 + 13));
+            try {
+                map.put("timen", DateUtil.getUnixTimestap(DateUtil.StringToDate(getTime(data, i * 13 + 19), TIMEFORMAT)));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            list.add(map);
+        }
+        paramMap.put("equilist", list);
+        // paramMap.put("3G", ByteUtil.byteArrayToInt(new byte[] { data[1] },
+        // 1));
+        // paramMap.put("4G", ByteUtil.byteArrayToInt(new byte[] { data[2] },
+        // 1));
+        // paramMap.put("170M", ByteUtil.byteArrayToInt(new byte[] { data[3] },
+        // 1));
+        // paramMap.put("315M", ByteUtil.byteArrayToInt(new byte[] { data[4] },
+        // 1));
+        // paramMap.put("433M", ByteUtil.byteArrayToInt(new byte[] { data[5] },
+        // 1));
+        // paramMap.put("868M", ByteUtil.byteArrayToInt(new byte[] { data[6] },
+        // 1));
+        // paramMap.put("915M/920M", ByteUtil.byteArrayToInt(new byte[] {
+        // data[7] }, 1));
+
+    }
+
+    private static String getCarId(byte[] data, int pos) {
+
+        String carid = ByteUtil.byteArrayToInt(new byte[] { data[pos], data[pos + 1], data[pos + 2], data[pos + 3], data[pos + 4], data[pos + 5] }, 6) + "";
+        System.out.println(carid + "carid:");
+        return carid;
+    }
+
+    private static String getTime(byte[] data, int pos) {
+        String yearPre = timeDf.format(ByteUtil.byteArrayToInt(new byte[] { data[pos] }, 1)), year = timeDf.format(ByteUtil.byteArrayToInt(new byte[] { data[pos + 1] }, 1)), month = timeDf
+                .format(ByteUtil.byteArrayToInt(new byte[] { data[pos + 2] }, 1)), day = timeDf.format(ByteUtil.byteArrayToInt(new byte[] { data[pos + 3] }, 1)), hh = timeDf.format(ByteUtil
+                .byteArrayToInt(new byte[] { data[pos + 4] }, 1)), mm = timeDf.format(ByteUtil.byteArrayToInt(new byte[] { data[pos + 5] }, 1)), ss = timeDf.format(ByteUtil.byteArrayToInt(
+                new byte[] { data[pos + 6] }, 1));
+
+        return yearPre + year + month + day + hh + mm + ss;
     }
 
     /**
@@ -255,16 +353,21 @@ public class Msg {
     }
 
     public static void main(String[] args) {
-        String temp = "EC010400989680B368";
-
-        BigDecimal lls = new BigDecimal("11." + df.format(123));
-        logger.debug(":::" + lls.doubleValue());
+        try {
+            System.out.println(ByteUtil.printHexString("1".getBytes("utf8")));
+        } catch (UnsupportedEncodingException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        String temp = "000114110a1b1016000005000110000001094614110a1b101f00".toUpperCase();
 
         byte[] temps = ByteUtil.hexString2Bytes(temp);
 
         try {
-            Msg.conventMsg(temps, null, null);
-        } catch (UnsupportedEncodingException e) {
+            Map<String, Object> map = new HashMap<String, Object>();
+            initJizhanMap(map, temps);
+            Logs.WS.info("send location msg:" + new JSONObject(map).toString());
+        } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
