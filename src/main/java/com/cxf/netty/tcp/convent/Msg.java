@@ -46,21 +46,21 @@ public class Msg {
     public static byte[] conventMsg(Object msg, ChannelHandlerContext ctx, ConnectionManager connectionManager) throws UnsupportedEncodingException {
 
         ByteBuf totalBytes = Unpooled.wrappedBuffer((byte[]) msg);
-        ByteBuf cmdBytes = totalBytes.slice(0, 1), lenBytes = totalBytes.slice(1, 1);
+        ByteBuf cmdBytes = totalBytes.slice(0, 1), lenBytes = totalBytes.slice(1, 2);
 
-        byte[] cmds = new byte[1], lens = new byte[1];
+        byte[] cmds = new byte[1], lens = new byte[2];
 
         cmdBytes.readBytes(cmds);
         lenBytes.readBytes(lens);
 
-        int len = ByteUtil.byteArrayToInt(lens, 1), signLen = 1;
+        int len = ByteUtil.byteArrayToInt(lens, 2), signLen = 1;
 
-        ByteBuf dataBytes = totalBytes.slice(2, len);
-        ByteBuf signBytes = totalBytes.slice(2 + len, signLen);
-        ByteBuf checkBytes = totalBytes.slice(0, 2 + len);
+        ByteBuf dataBytes = totalBytes.slice(3, len);
+        ByteBuf signBytes = totalBytes.slice(3 + len, signLen);
+        ByteBuf checkBytes = totalBytes.slice(0, 3 + len);
         byte[] datas = new byte[len];
         dataBytes.readBytes(datas);
-        byte[] checkBytesArray = new byte[2 + len], signBytesArray = new byte[signLen];
+        byte[] checkBytesArray = new byte[3 + len], signBytesArray = new byte[signLen];
 
         checkBytes.readBytes(checkBytesArray);
         signBytes.readBytes(signBytesArray);
@@ -177,7 +177,6 @@ public class Msg {
 
         case (byte) 0xBC:
 
-            Logs.WS.info("基站数据  info:" + new JSONObject(paramMap).toString());
             url = PropertiesUtil.getValue("system.jizhan.url");
             if (Strings.isBlank(url)) {
                 logger.error("error system.jizhan.url is null:" + url);
@@ -251,50 +250,48 @@ public class Msg {
         paramMap.put("gpsstatus", "");
         paramMap.put("nss", ByteUtil.byteArrayToInt(nss, 1));
         paramMap.put("ews", ByteUtil.byteArrayToInt(ews, 1));
+        try {
+            paramMap.put("timen", DateUtil.getUnixTimestap(DateUtil.StringToDate(getTime(data, 13), TIMEFORMAT)));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
 
     }
 
     public static void initJizhanMap(Map<String, Object> paramMap, byte[] data) {
-        paramMap.put("nettype", ByteUtil.byteArrayToInt(new byte[] { data[0], data[1] }, 2));
-        paramMap.put("frerange", "");
-        paramMap.put("basetime", getTime(data, 2));
-        paramMap.put("timerange", ByteUtil.byteArrayToInt(new byte[] { data[9], data[10] }, 2));
-        int count = ByteUtil.byteArrayToInt(new byte[] { data[11], data[12] }, 2);
+        paramMap.put("frerange", ByteUtil.byteArrayToInt(new byte[] { data[0], data[1] }, 2));
+        paramMap.put("nettype", ByteUtil.byteArrayToInt(new byte[] { data[2] }, 1));
+        paramMap.put("basetime", getTime(data, 3));
+        paramMap.put("timerange", ByteUtil.byteArrayToInt(new byte[] { data[10], data[11] }, 2));
+        int count = ByteUtil.byteArrayToInt(new byte[] { data[12], data[13] }, 2);
         paramMap.put("equirange", count);
-
         List<Map> list = new ArrayList<Map>();
         for (int i = 0; i < count; i++) {
+            if (data.length <= i * 14 + 20) {
+                System.out.println("this is end:");
+                break;
+            }
             Map<String, Object> map = new HashMap<String, Object>();
-            map.put("carid", getCarId(data, i * 13 + 13));
+            map.put("carid", getCarId(data, i * 14 + 14));
+            map.put("sd", ByteUtil.byteArrayToInt(new byte[] { data[i * 14 + 20] }, 1));
             try {
-                map.put("timen", DateUtil.getUnixTimestap(DateUtil.StringToDate(getTime(data, i * 13 + 19), TIMEFORMAT)));
+                map.put("timen", DateUtil.getUnixTimestap(DateUtil.StringToDate(getTime(data, i * 14 + 21), TIMEFORMAT)));
             } catch (ParseException e) {
                 e.printStackTrace();
             }
             list.add(map);
         }
         paramMap.put("equilist", list);
-        // paramMap.put("3G", ByteUtil.byteArrayToInt(new byte[] { data[1] },
-        // 1));
-        // paramMap.put("4G", ByteUtil.byteArrayToInt(new byte[] { data[2] },
-        // 1));
-        // paramMap.put("170M", ByteUtil.byteArrayToInt(new byte[] { data[3] },
-        // 1));
-        // paramMap.put("315M", ByteUtil.byteArrayToInt(new byte[] { data[4] },
-        // 1));
-        // paramMap.put("433M", ByteUtil.byteArrayToInt(new byte[] { data[5] },
-        // 1));
-        // paramMap.put("868M", ByteUtil.byteArrayToInt(new byte[] { data[6] },
-        // 1));
-        // paramMap.put("915M/920M", ByteUtil.byteArrayToInt(new byte[] {
-        // data[7] }, 1));
 
     }
 
     private static String getCarId(byte[] data, int pos) {
-
-        String carid = ByteUtil.byteArrayToInt(new byte[] { data[pos], data[pos + 1], data[pos + 2], data[pos + 3], data[pos + 4], data[pos + 5] }, 6) + "";
-        System.out.println(carid + "carid:");
+        byte[] cars = new byte[] { data[pos], data[pos + 1], data[pos + 2], data[pos + 3], data[pos + 4], data[pos + 5] };
+        // String carid = ByteUtil.byteArrayToInt(new byte[] { data[pos],
+        // data[pos + 1], data[pos + 2], data[pos + 3], data[pos + 4], data[pos
+        // + 5] }, 6) + "";
+        String carid = ByteUtil.printHexString(cars).replace(" ", "");
+        // System.out.println(carid + "carid:");
         return carid;
     }
 
@@ -349,23 +346,24 @@ public class Msg {
 
     public static byte[] initLen(int size) {
         logger.debug("len:" + size);
-        return ByteUtil.intToByteArray(size, 1);
+        return ByteUtil.intToByteArray(size, 2);
     }
 
     public static void main(String[] args) {
         try {
             System.out.println(ByteUtil.printHexString("1".getBytes("utf8")));
         } catch (UnsupportedEncodingException e1) {
-            // TODO Auto-generated catch block
             e1.printStackTrace();
         }
-        String temp = "000114110a1b1016000005000110000001094614110a1b101f00".toUpperCase();
+        String temp = "010101026E770160AA1F012AE514110B0D0B0B00";
+        // "00010114110A1E140015000A000A10000001094614110A1B101F0010000001094714110A1E09240010000001094814110A1E09250014110B0D0B0B00".toUpperCase();
 
         byte[] temps = ByteUtil.hexString2Bytes(temp);
 
         try {
             Map<String, Object> map = new HashMap<String, Object>();
-            initJizhanMap(map, temps);
+            // initJizhanMap(map, temps);
+            initLocationMap(map, temps);
             Logs.WS.info("send location msg:" + new JSONObject(map).toString());
         } catch (Exception e) {
             // TODO Auto-generated catch block

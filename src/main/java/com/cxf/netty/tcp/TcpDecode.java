@@ -19,41 +19,41 @@ public class TcpDecode extends MessageToMessageDecoder<ByteBuf> {
             in.getBytes(0, array);
             Logs.TCP.warn("receive msg:" + ByteUtil.printHexString(array));
 
-            ByteBuf cmdBytes = in.slice(0, 1), lenBytes = in.slice(1, 1);
+            ByteBuf cmdBytes = in.slice(0, 1), lenBytes = in.slice(1, 2);
 
-            byte[] cmds = new byte[1], lens = new byte[1];
+            byte[] cmds = new byte[1], lens = new byte[2];
 
             cmdBytes.readBytes(cmds);
             lenBytes.readBytes(lens);
 
-            int len = ByteUtil.byteArrayToInt(lens, 1);
+            int len = ByteUtil.byteArrayToInt(lens, 2);
             byte[] newArray;
             ByteBuf msgByte;
 
             switch (cmds[0]) {
             case 0x01:
-                newArray = new byte[3 + len];
-                msgByte = in.slice(0, 3 + len);
+                newArray = new byte[4 + len];
+                msgByte = in.slice(0, 4 + len);
                 msgByte.readBytes(newArray);
                 out.add(newArray);
                 break;
 
             case (byte) 0xBE:
-                newArray = new byte[3 + len];
-                msgByte = in.slice(0, 3 + len);
+                newArray = new byte[4 + len];
+                msgByte = in.slice(0, 4 + len);
                 msgByte.readBytes(newArray);
                 out.add(newArray);
                 break;
 
             case (byte) 0xBC:
-                newArray = new byte[3 + len];
-                msgByte = in.slice(0, 3 + len);
+                newArray = new byte[4 + len];
+                msgByte = in.slice(0, 4 + len);
                 msgByte.readBytes(newArray);
                 out.add(newArray);
                 break;
             case (byte) 0x08:
-                newArray = new byte[3 + len];
-                msgByte = in.slice(0, 3 + len);
+                newArray = new byte[4 + len];
+                msgByte = in.slice(0, 4 + len);
                 msgByte.readBytes(newArray);
                 out.add(newArray);
                 break;

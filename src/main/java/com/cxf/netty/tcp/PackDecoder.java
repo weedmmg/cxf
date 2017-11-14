@@ -11,7 +11,7 @@ import com.cxf.util.ByteUtil;
 public class PackDecoder extends LengthFieldBasedFrameDecoder {
 
     public PackDecoder() {
-        super(16 * 1024, 1, 1, 2, 0);
+        super(16 * 1024, 1, 2, 2, 0);
     }
 
     public PackDecoder(int maxFrameLength, int lengthFieldOffset, int lengthFieldLength, int lengthAdjustment, int initialBytesToStrip) {
