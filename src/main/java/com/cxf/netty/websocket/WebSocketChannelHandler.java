@@ -66,7 +66,7 @@ public class WebSocketChannelHandler extends SimpleChannelInboundHandler<WebSock
                     Logs.WS.info("set receve id:" + ctx.channel().id().toString());
                     byte cmd = 0x03;
                     try {
-                        byte[] pushMsg = Msg.intMsg(cmd, times.getBytes("utf8"));
+                        byte[] pushMsg = Msg.intMsg(cmd, ByteUtil.intToByteArray(Integer.valueOf(times), 2));
                         sendConnection.send(pushMsg);
 
                     } catch (Exception e) {
